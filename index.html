@@ -77,6 +77,7 @@ textarea:focus{border-color:var(--teal);box-shadow:0 0 0 4px rgba(14,165,160,.12
 
 /* PREVIEW */
 .preview-card{background:#fff;border-radius:24px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:22px;border:2px solid var(--violet-l);display:none}
+.preview-card.show{display:block}
 .preview-toolbar{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:linear-gradient(135deg,var(--violet-l),#F5F3FF);flex-wrap:wrap;gap:10px}
 .preview-toolbar-title{font-family:'Jua',sans-serif;font-size:15px;color:var(--violet);display:flex;align-items:center;gap:6px}
 .preview-toolbar-btns{display:flex;gap:8px;flex-wrap:wrap}
@@ -91,10 +92,10 @@ textarea:focus{border-color:var(--teal);box-shadow:0 0 0 4px rgba(14,165,160,.12
 .preview-frame-wrap{background:#fff}
 #previewFrame{width:100%;height:440px;border:none;display:block;background:#fff}
 
-.preview-card.fs{position:fixed;inset:0;z-index:999;border-radius:0;margin:0;max-width:none;width:100vw;height:100vh;display:flex;flex-direction:column}
-.preview-card.fs .preview-frame-wrap{flex:1;min-height:0}
-.preview-card.fs #previewFrame{height:100%;width:100%}
-.preview-card.fs .version-row,.preview-card.fs .share-box{display:none}
+.preview-card.show.fs{position:fixed;inset:0;z-index:999;border-radius:0;margin:0;max-width:none;width:100vw;height:100vh;display:flex;flex-direction:column}
+.preview-card.show.fs .preview-frame-wrap{flex:1;min-height:0}
+.preview-card.show.fs #previewFrame{height:100%;width:100%}
+.preview-card.show.fs .version-row,.preview-card.show.fs .share-box{display:none}
 
 /* VERSIONS */
 .version-row{display:flex;flex-wrap:wrap;gap:8px;padding:12px 18px 16px}
@@ -325,8 +326,8 @@ async function callGeminiCode(prompt) {
         body: JSON.stringify({
           contents:[{parts:[{text:prompt}]}],
           generationConfig:{
-            temperature:0.65,
-            maxOutputTokens:32768,
+            temperature:0.75,
+            maxOutputTokens:65535,
             responseMimeType:"application/json",
             responseSchema:{
               type:"OBJECT",
@@ -354,28 +355,32 @@ async function callGeminiCode(prompt) {
 }
 
 function buildCodePrompt(existingCode, request) {
-  var base = "당신은 초등학생들을 위한 'HTML/JS/CSS 원페이지 게임 및 도구 제작 전문가'입니다. "
-    + "학생이 말하는 아이디어를 실제로 잘 작동하는, 완성도 높은 미니 게임이나 도구로 만들어주는 것이 목표입니다.\n\n"
+  var base = "당신은 실리콘밸리 최고 수준의 프론트엔드 개발자이자 게임 개발자입니다. "
+    + "지금은 초등학생 고객을 위한 'HTML/JS/CSS 원페이지 게임 및 도구'를 만드는 중이지만, "
+    + "고객이 초등학생이라는 이유로 결과물의 완성도나 전문성을 절대 낮추지 마세요. "
+    + "실제 앱스토어나 itch.io에 출시해도 손색없을 정도로 세련되고 완성도 높은 결과물을 만드는 것이 목표입니다.\n\n"
     + "필수 기술 지침:\n"
     + "- 단일 파일 구조: <!DOCTYPE html>부터 </html>까지 모든 HTML, CSS(<style> 안), JavaScript(<script> 안)를 한 파일에 전부 포함하세요.\n"
-    + "- 완성도를 높이기 위해 필요하다면 아래 CDN 라이브러리를 적극 활용하세요 (실제 존재하는 정확한 URL로 <script src=\"...\"> 또는 <link href=\"...\">를 사용): \n"
-    + "  · 아이콘: https://cdnjs.cloudflare.com 의 Font Awesome\n"
-    + "  · 애니메이션: https://cdnjs.cloudflare.com 의 Animate.css\n"
-    + "  · 한글 폰트: https://fonts.googleapis.com 의 Google Fonts (Gaegu, Jua, Noto Sans KR 등 가독성 좋고 아이들이 좋아할 폰트)\n"
-    + "  · 필요하면 Canvas API로 파티클/폭죽 같은 화려한 효과를 직접 구현하세요.\n"
-    + "- 초등학생이 신기해할 인터랙티브 요소(클릭 시 효과, 점수 계산, 타이머, 애니메이션, 효과음 등)를 적극 넣어 완성도 있게 만드세요. 대충 만들지 말고 실제로 끝까지 플레이 가능한 수준으로 완성하세요.\n"
-    + "- Flexbox/Grid를 사용해 태블릿이나 PC 어디서든 화면을 꽉 채우는 반응형 레이아웃으로 만드세요. html, body는 반드시 margin:0; padding:0; height:100%; 로 설정하고, 최상위 컨테이너는 min-height:100vh; width:100%; 로 화면 전체를 가득 채우도록 만드세요 (전체화면으로 봤을 때 빈 여백이 크게 남지 않아야 합니다).\n"
-    + "- 밝고 알록달록한 디자인, 큰 글씨, 이모지를 적극 활용하세요.\n"
+    + "- 완성도를 높이기 위해 아래 CDN 라이브러리를 적극적이고 과감하게 활용하세요 (실제 존재하는 정확한 URL로 <script src=\"...\"> 또는 <link href=\"...\">를 사용):\n"
+    + "  · 아이콘: https://cdnjs.cloudflare.com 의 Font Awesome 또는 Lucide\n"
+    + "  · 애니메이션: https://cdnjs.cloudflare.com 의 Animate.css, GSAP\n"
+    + "  · 효과: https://cdnjs.cloudflare.com 의 canvas-confetti(축하 효과), Howler.js(효과음/배경음악)\n"
+    + "  · 폰트: https://fonts.googleapis.com 의 Google Fonts (Gaegu, Jua, Noto Sans KR, Do Hyeon 등 개성 있고 가독성 좋은 한글 폰트)\n"
+    + "  · 게임 로직이 복잡한 요청(예: 테트리스, 플래피버드, 뱀 게임, 벽돌깨기 등)은 Canvas API로 실제 원작처럼 정확한 규칙과 충돌 판정을 구현하세요. 대충 흉내만 내지 말고 끝까지 플레이 가능하게 완성하세요.\n"
+    + "- 시각적 완성도: 그라데이션, 그림자(box-shadow), 둥근 모서리, 부드러운 트랜지션/애니메이션, 인터랙션 피드백(호버, 클릭 효과)을 적극 활용해 프리미엄한 느낌을 주세요. 밋밋하고 단조로운 디자인은 피하세요.\n"
+    + "- 인터랙티브 요소(클릭 효과, 점수 계산, 콤보, 타이머, 레벨업, 효과음, 파티클 등)를 넣어 실제 손맛 있는 경험을 만드세요.\n"
+    + "- Flexbox/Grid를 사용해 화면 전체를 빈틈없이 채우는 완전 반응형 레이아웃을 만드세요. html, body는 반드시 margin:0; padding:0; height:100%; overflow-x:hidden; 으로 설정하고, 최상위 컨테이너는 min-height:100vh; width:100%; box-sizing:border-box; 로 화면 전체를 가득 채우세요 (전체화면으로 봤을 때 위아래나 좌우에 빈 여백이 남으면 안 됩니다).\n"
+    + "- 이모지는 포인트로만 적절히 사용하고, 유치해 보이지 않게 전체적으로 세련된 톤을 유지하세요.\n"
     + "- 코드 중간중간 // 주석으로 어느 부분을 바꾸면 무엇이 바뀌는지 친절하게 알려주세요. (예: // 여기서 배경 색을 바꿀 수 있어요!)\n"
-    + "- 모든 자바스크립트 로직은 오류 없이 즉시 실행되어야 합니다.\n"
-    + "- 폭력적이거나 무섭거나 부적절한 내용은 절대 넣지 마세요.\n"
-    + "- 반드시 JSON 형식으로만 답하세요. reply 필드에는 학생에게 보여줄 아주 짧고 활기찬 한두 문장 설명을 마법사 선생님처럼 친근한 말투로 쓰세요(이모지 사용 가능, 코드나 기술 용어 언급 금지). code 필드에는 완성된 HTML 파일 전체를 문자열로 담으세요.";
+    + "- 모든 자바스크립트 로직은 오류 없이 즉시 완벽하게 동작해야 합니다. 버그나 미완성 기능이 없도록 꼼꼼하게 작성하세요.\n"
+    + "- 폭력적이거나 무섭거나 부적절한 내용은 절대 넣지 마세요. (안전 기준은 지키되, 그 안에서는 완성도를 절대 타협하지 마세요.)\n"
+    + "- 반드시 JSON 형식으로만 답하세요. reply 필드에는 학생에게 보여줄 아주 짧고 활기찬 한두 문장 설명을 친근한 말투로 쓰세요(이모지 사용 가능, 코드나 기술 용어 언급 금지). code 필드에는 완성된 HTML 파일 전체를 문자열로 담으세요.";
   if (existingCode) {
     return base + "\n\n--- 지금까지 만든 코드 ---\n" + existingCode + "\n--- 코드 끝 ---\n\n"
       + '학생의 새 요청: "' + request + '"\n'
-      + "기존에 잘 동작하던 기능과 디자인은 최대한 그대로 유지하면서, 요청한 부분만 반영해서 전체 코드를 완성된 형태로 다시 만들어주세요.";
+      + "기존에 잘 동작하던 기능과 디자인은 최대한 그대로 유지하면서, 요청한 부분만 반영해서 전체 코드를 완성된 형태로 다시 만들어주세요. 이 기회에 전체적인 완성도도 더 높여주세요.";
   }
-  return base + '\n\n학생의 요청: "' + request + '"\n이 요청에 맞는 새로운 앱을 처음부터 완성도 있게 만들어주세요.';
+  return base + '\n\n학생의 요청: "' + request + '"\n이 요청에 맞는 새로운 앱을 처음부터 최고 수준의 완성도로 만들어주세요.';
 }
 
 function parseCodeResponse(txt, truncated) {
@@ -447,11 +452,18 @@ async function submitFollowup() {
 
 async function runGeneration(request, btnId, btnDefaultText) {
   var btn = document.getElementById(btnId);
+  var loadingEl = document.getElementById("loading");
+  var errorEl = document.getElementById("errorBox");
+  // 로딩/진행률 표시를 방금 누른 버튼 바로 아래로 옮겨서, 스크롤하지 않아도 바로 보이게 해요.
+  btn.insertAdjacentElement("afterend", errorEl);
+  btn.insertAdjacentElement("afterend", loadingEl);
+
   btn.disabled = true;
-  document.getElementById("loading").style.display = "block";
-  document.getElementById("errorBox").style.display = "none";
+  loadingEl.style.display = "block";
+  errorEl.style.display = "none";
   document.getElementById("loadingText").textContent = currentCode ? "AI가 코드를 고치고 있어요..." : "AI가 코드를 쓰고 있어요...";
   startProgress();
+  loadingEl.scrollIntoView({behavior:"smooth", block:"center"});
 
   addChat("user", request);
 
@@ -469,7 +481,7 @@ async function runGeneration(request, btnId, btnDefaultText) {
     renderPreview(currentCode);
     renderVersions();
 
-    document.getElementById("previewCard").style.display = "block";
+    document.getElementById("previewCard").classList.add("show");
     document.getElementById("chatCard").style.display = "block";
     document.getElementById("followupCard").style.display = "block";
     document.getElementById("previewTitle").textContent = appTitle;
@@ -565,7 +577,7 @@ function resetApp() {
   document.getElementById("chatLog").innerHTML = "";
   document.getElementById("versionRow").innerHTML = "";
   document.getElementById("previewFrame").srcdoc = "";
-  document.getElementById("previewCard").style.display = "none";
+  document.getElementById("previewCard").classList.remove("show");
   document.getElementById("chatCard").style.display = "none";
   document.getElementById("followupCard").style.display = "none";
   document.getElementById("shareBox").classList.remove("show");
@@ -621,7 +633,7 @@ async function loadSharedApp(id) {
     var row = rows[0];
     sharedCode = row.code; sharedTitle = row.title;
     renderPreview(sharedCode);
-    document.getElementById("previewCard").style.display = "block";
+    document.getElementById("previewCard").classList.add("show");
     document.getElementById("previewTitle").textContent = sharedTitle;
     document.getElementById("shareBtnTop").style.display = "none";
     document.getElementById("previewCard").scrollIntoView({behavior:"instant", block:"start"});
