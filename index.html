@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>🕹️ 바이브 코딩 놀이터</title>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --teal:#0EA5A0;   --teal-l:#E4FBF8;
+  --violet:#6C5CE7; --violet-l:#EFEDFF;
+  --amber:#FFA53D;  --amber-l:#FFF3E3;
+  --pink:#FF5D9E;   --pink-l:#FFEEF4;
+  --green:#22C55E;  --green-l:#EAFBF0;
+  --gray-50:#F9FAFB; --gray-100:#F3F4F6; --gray-200:#E5E7EB;
+  --gray-400:#9CA3AF; --gray-600:#4B5563; --gray-800:#1F2937;
+  --shadow:0 4px 20px rgba(0,0,0,.10);
+  --shadow-sm:0 2px 8px rgba(0,0,0,.07);
+  --r:16px; --r-sm:10px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',sans-serif;background:linear-gradient(160deg,#EAFBFA,#EFF0FF 55%,#FFF6EC);min-height:100vh;color:var(--gray-800)}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,var(--teal),#3BC9DB 45%,var(--violet));padding:0 24px;box-shadow:0 4px 20px rgba(14,165,160,.3);position:sticky;top:0;z-index:50}
+.header-inner{max-width:900px;margin:0 auto;height:68px;display:flex;align-items:center;justify-content:space-between}
+.brand{font-family:'Jua',sans-serif;font-size:22px;color:#fff;display:flex;align-items:center;gap:10px;text-shadow:0 2px 6px rgba(0,0,0,.15)}
+.brand-emoji{font-size:28px;animation:bounce 2s infinite}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.db-badge{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.25);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700;color:#fff}
+.dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.4)}
+.dot.ok{background:#4ADE80;box-shadow:0 0 6px #4ADE80}
+.dot.err{background:#F87171}
+
+/* LAYOUT */
+.main{max-width:900px;margin:0 auto;padding:32px 20px 80px}
+.card{background:#fff;border-radius:24px;box-shadow:var(--shadow);padding:26px 24px;margin-bottom:22px;border:2px solid var(--teal-l)}
+.card-title{font-family:'Jua',sans-serif;font-size:19px;color:var(--teal);margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.card-sub{font-size:13px;color:var(--gray-400);margin-bottom:16px}
+
+/* IDEA CHIPS */
+.idea-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.i-chip{padding:7px 14px;border-radius:20px;background:var(--gray-50);color:var(--gray-600);font-size:13px;font-weight:700;cursor:pointer;border:2px solid var(--gray-200);transition:all .15s;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.i-chip:hover{border-color:var(--teal);color:var(--teal)}
+
+/* INPUT */
+.field-count{font-size:11px;color:var(--gray-400);font-weight:400;float:right}
+textarea{width:100%;padding:14px 16px;border:2px solid var(--gray-200);border-radius:var(--r);font-size:15px;font-family:'Noto Sans KR',sans-serif;outline:none;transition:border-color .2s,box-shadow .2s;background:var(--gray-50);resize:vertical;min-height:78px;line-height:1.6}
+textarea:focus{border-color:var(--teal);box-shadow:0 0 0 4px rgba(14,165,160,.12);background:#fff}
+.btn-make{display:block;width:100%;padding:15px;margin-top:12px;background:linear-gradient(135deg,var(--violet),#8B7CF6);color:#fff;border:none;border-radius:var(--r);font-family:'Jua',sans-serif;font-size:17px;cursor:pointer;box-shadow:0 6px 20px rgba(108,92,231,.35);transition:transform .15s;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.btn-make:hover:not(:disabled){transform:translateY(-2px)}
+.btn-make:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+/* LOADING */
+.loading{text-align:center;padding:40px 20px;display:none}
+.spinner{width:50px;height:50px;margin:0 auto 16px;border:5px solid var(--teal-l);border-top-color:var(--teal);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-family:'Jua',sans-serif;font-size:17px;color:var(--teal)}
+.loading-sub{font-size:12px;color:var(--gray-400);margin-top:6px}
+
+/* ERROR */
+.error-box{background:#FFF1F2;border:2px solid #FECDD3;border-radius:var(--r);padding:16px 20px;color:#9F1239;font-size:14px;display:none;margin-bottom:20px;line-height:1.6}
+
+/* CHAT LOG */
+.chat-log{display:flex;flex-direction:column;gap:10px;margin-bottom:6px}
+.chat-msg{display:flex;gap:10px;align-items:flex-start}
+.chat-msg.user{flex-direction:row-reverse}
+.chat-bubble{max-width:78%;padding:10px 14px;border-radius:16px;font-size:14px;line-height:1.6}
+.chat-msg.ai .chat-bubble{background:var(--teal-l);color:#0F7A75;border-bottom-left-radius:4px}
+.chat-msg.user .chat-bubble{background:var(--violet-l);color:#4B3FC7;border-bottom-right-radius:4px}
+.chat-avatar{font-size:20px;flex-shrink:0}
+
+/* PREVIEW */
+.preview-card{background:#fff;border-radius:24px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:22px;border:2px solid var(--violet-l);display:none}
+.preview-toolbar{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:linear-gradient(135deg,var(--violet-l),#F5F3FF);flex-wrap:wrap;gap:10px}
+.preview-toolbar-title{font-family:'Jua',sans-serif;font-size:15px;color:var(--violet);display:flex;align-items:center;gap:6px}
+.preview-toolbar-btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn-sm{padding:8px 14px;border-radius:var(--r-sm);font-family:'Jua',sans-serif;font-size:12.5px;cursor:pointer;border:2px solid transparent;transition:all .15s;touch-action:manipulation;-webkit-tap-highlight-color:transparent;background:#fff}
+.btn-sm.fs{background:var(--violet);color:#fff}
+.btn-sm.fs:hover{background:#5A4BD6}
+.btn-sm.share{background:var(--amber-l);color:#B45309;border-color:var(--amber)}
+.btn-sm.share:hover{background:var(--amber);color:#fff}
+.btn-sm.close{background:var(--gray-100);color:var(--gray-600)}
+.preview-frame-wrap{background:#fff}
+#previewFrame{width:100%;height:440px;border:none;display:block;background:#fff}
+
+.preview-card.fs{position:fixed;inset:0;z-index:999;border-radius:0;margin:0;max-width:none;display:flex;flex-direction:column}
+.preview-card.fs .preview-frame-wrap{flex:1}
+.preview-card.fs #previewFrame{height:100%}
+
+/* VERSIONS */
+.version-row{display:flex;flex-wrap:wrap;gap:8px;padding:12px 18px 16px}
+.v-chip{padding:6px 13px;border-radius:20px;background:var(--gray-50);border:1.5px solid var(--gray-200);font-size:12.5px;font-weight:700;cursor:pointer;transition:all .15s;color:var(--gray-600);touch-action:manipulation}
+.v-chip:hover{border-color:var(--violet);color:var(--violet)}
+.v-chip.cur{background:var(--violet);border-color:var(--violet);color:#fff}
+
+/* SHARE BOX */
+.share-box{background:var(--amber-l);border:2px solid var(--amber);border-radius:var(--r);padding:14px 16px;margin:0 18px 18px;display:none}
+.share-box.show{display:block}
+.share-row{display:flex;gap:8px;align-items:center}
+.share-row input{flex:1;background:#fff;padding:10px 14px;border:2px solid var(--gray-200);border-radius:var(--r-sm);font-size:13px}
+.btn-copy{padding:10px 16px;border-radius:var(--r-sm);background:var(--amber);color:#fff;border:none;font-family:'Jua',sans-serif;font-size:13px;cursor:pointer;white-space:nowrap;touch-action:manipulation}
+.share-hint{font-size:12px;color:#B45309;margin-top:8px}
+
+/* FOLLOWUP */
+.followup-wrap{display:none}
+
+/* SHARED BANNER */
+.shared-banner{background:linear-gradient(135deg,var(--violet-l),var(--pink-l));border:2px solid var(--violet);border-radius:var(--r);padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.shared-banner-text{font-family:'Jua',sans-serif;font-size:14px;color:var(--violet)}
+.btn-fork{padding:10px 18px;border-radius:var(--r-sm);background:var(--violet);color:#fff;border:none;font-family:'Jua',sans-serif;font-size:13px;cursor:pointer;touch-action:manipulation}
+
+/* HISTORY */
+.history-list{display:flex;flex-wrap:wrap;gap:8px}
+.h-item{padding:6px 14px;border-radius:20px;background:var(--gray-50);border:1.5px solid var(--gray-200);font-size:13px;cursor:pointer;transition:all .15s;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.h-item:hover{background:var(--teal-l);border-color:var(--teal);color:var(--teal)}
+.h-empty{font-size:13px;color:var(--gray-400)}
+
+/* TOAST */
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--gray-800);color:#fff;padding:11px 22px;border-radius:30px;font-size:13px;font-weight:700;box-shadow:0 10px 40px rgba(0,0,0,.2);transition:transform .3s,opacity .3s;opacity:0;pointer-events:none;z-index:1100;max-width:86vw;text-align:center}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <div class="brand"><span class="brand-emoji">🕹️</span>바이브 코딩 놀이터</div>
+    <div class="db-badge"><div class="dot" id="dbDot"></div><span id="dbText">연결 중…</span></div>
+  </div>
+</header>
+
+<main class="main">
+
+  <div id="sharedBanner" class="shared-banner" style="display:none">
+    <span class="shared-banner-text">👀 친구가 만든 앱이에요!</span>
+    <button class="btn-fork" onclick="forkFromShared()">🔀 이어서 만들기</button>
+  </div>
+
+  <div class="card" id="startCard">
+    <div class="card-title">🪄 무엇을 만들고 싶나요?</div>
+    <div class="card-sub">만들고 싶은 것을 자유롭게 써보세요. 예를 들고 싶으면 아래 버튼을 눌러보세요!</div>
+    <div class="idea-chips" id="ideaChips"></div>
+    <textarea id="requestInput" maxlength="200" placeholder="예: 클릭하면 점수가 올라가는 게임을 만들어줘"></textarea>
+    <div class="field-count"><span id="reqCount">0</span>/200자</div>
+    <button id="makeBtn" class="btn-make" onclick="submitRequest()">🚀 만들기</button>
+  </div>
+
+  <div class="error-box" id="errorBox"></div>
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loadingText">AI가 코드를 쓰고 있어요...</div>
+    <div class="loading-sub">조금만 기다려 주세요! 💻</div>
+  </div>
+
+  <div class="card" id="chatCard" style="display:none">
+    <div class="card-title" style="font-size:16px">💬 대화 기록</div>
+    <div class="chat-log" id="chatLog"></div>
+  </div>
+
+  <div class="preview-card" id="previewCard">
+    <div class="preview-toolbar">
+      <div class="preview-toolbar-title">👀 <span id="previewTitle">미리보기</span></div>
+      <div class="preview-toolbar-btns">
+        <button class="btn-sm fs" id="fsBtn" onclick="toggleFullscreen()">🔍 전체화면</button>
+        <button class="btn-sm share" id="shareBtnTop" onclick="shareApp()">🔗 공유하기</button>
+      </div>
+    </div>
+    <div class="preview-frame-wrap">
+      <iframe id="previewFrame" sandbox="allow-scripts allow-forms allow-modals allow-popups" title="미리보기"></iframe>
+    </div>
+    <div class="version-row" id="versionRow"></div>
+    <div class="share-box" id="shareBox">
+      <div class="share-row">
+        <input id="shareLinkInput" type="text" readonly/>
+        <button class="btn-copy" onclick="copyShareLink()">📋 복사</button>
+      </div>
+      <div class="share-hint">이 링크를 친구에게 보내면 바로 앱을 볼 수 있어요!</div>
+    </div>
+  </div>
+
+  <div class="card followup-wrap" id="followupCard">
+    <div class="card-title">✏️ 더 고치고 싶은 부분이 있나요?</div>
+    <div class="card-sub">예: 배경색을 파란색으로 바꿔줘 / 버튼을 더 크게 만들어줘</div>
+    <textarea id="followupInput" maxlength="200" placeholder="고치고 싶은 부분을 써보세요"></textarea>
+    <div class="field-count"><span id="followCount">0</span>/200자</div>
+    <button id="followBtn" class="btn-make" onclick="submitFollowup()">✨ 수정하기</button>
+  </div>
+
+  <div class="card" id="historyCard" style="margin-top:8px">
+    <div class="card-title" style="font-size:16px">🕒 내가 만든 앱들</div>
+    <div class="history-list" id="historyList"><span class="h-empty">아직 만든 앱이 없어요.</span></div>
+  </div>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+/* ===== SUPABASE ===== */
+const SB_URL  = "https://pqjuvuflinnrpemqcafl.supabase.co";
+const SB_KEY  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBxanV2dWZsaW5ucnBlbXFjYWZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0NzAzMjQsImV4cCI6MjA5NDA0NjMyNH0.E4sJv1gM9TbWG-2o90aH8wJXZMLRY_uLQ9fgWARX1Ro";
+const SB_H    = {"Content-Type":"application/json","apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,"Prefer":"return=representation"};
+
+async function sbGet(table, q) {
+  var res = await fetch(SB_URL + "/rest/v1/" + table + (q||""), {headers: SB_H});
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+async function sbInsert(table, row) {
+  var res = await fetch(SB_URL + "/rest/v1/" + table, {method:"POST", headers:SB_H, body:JSON.stringify(row)});
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+/* ===== STATE ===== */
+var GEMINI_KEY = "";
+var currentCode = "";
+var appTitle = "";
+var chatLogArr = [];      // {role:'user'|'ai', text}
+var versions = [];        // {label, code, request}
+var curVersionIdx = -1;
+var history_arr = [];     // {title, request, shareUrl|null}
+var isFullscreen = false;
+
+var IDEAS = [
+  {e:"🎮",n:"가위바위보 게임"},{e:"🎨",n:"그림판"},{e:"🧮",n:"계산기"},
+  {e:"⏰",n:"타이머"},{e:"🎯",n:"클릭하면 점수 오르는 게임"},{e:"🐱",n:"고양이 키우기 시뮬레이션"},
+  {e:"🎲",n:"주사위 굴리기"},{e:"🌈",n:"색깔 맞추기 게임"},{e:"📝",n:"할 일 목록"},
+  {e:"🃏",n:"카드 짝맞추기 게임"},{e:"🧩",n:"미로 찾기 게임"},{e:"🎵",n:"드럼 연주 앱"}
+];
+
+/* ===== DB 상태 ===== */
+function setDb(state) {
+  var dot = document.getElementById("dbDot"), txt = document.getElementById("dbText");
+  if (!dot||!txt) return;
+  if (state==="ok"){dot.className="dot ok";txt.textContent="연결됨";}
+  else if (state==="err"){dot.className="dot err";txt.textContent="DB 오류";}
+  else {dot.className="dot";txt.textContent="연결 중…";}
+}
+
+/* ===== INIT ===== */
+function init() {
+  setDb("connecting");
+  var settled = false;
+  function finish(ok){ if(settled)return; settled=true; setDb(ok?"ok":"err"); }
+  setTimeout(function(){ finish(false); }, 5000);
+
+  sbGet("settings", "?key=eq.gemini_api_key")
+    .then(function(rows){
+      if (rows && rows.length>0 && rows[0].value) GEMINI_KEY = rows[0].value;
+      finish(true);
+    })
+    .catch(function(e){ console.error("[DB]", e.message||e); finish(false); });
+
+  renderIdeaChips();
+  renderHistory();
+
+  document.getElementById("requestInput").addEventListener("input", function(){
+    document.getElementById("reqCount").textContent = this.value.length;
+  });
+  document.getElementById("followupInput").addEventListener("input", function(){
+    document.getElementById("followCount").textContent = this.value.length;
+  });
+
+  var appId = getQueryParam("app");
+  if (appId) {
+    document.getElementById("startCard").style.display = "none";
+    document.getElementById("historyCard").style.display = "none";
+    document.getElementById("sharedBanner").style.display = "flex";
+    loadSharedApp(appId);
+  }
+
+  document.addEventListener("keydown", function(e){
+    if (e.key === "Escape" && isFullscreen) toggleFullscreen();
+  });
+}
+
+/* ===== IDEA CHIPS ===== */
+function renderIdeaChips() {
+  var el = document.getElementById("ideaChips");
+  el.innerHTML = "";
+  var pool = IDEAS.slice();
+  for (var i=pool.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=pool[i];pool[i]=pool[j];pool[j]=t; }
+  pool.slice(0,6).forEach(function(idea){
+    var c = document.createElement("span");
+    c.className = "i-chip";
+    c.textContent = idea.e + " " + idea.n;
+    c.addEventListener("click", function(){
+      document.getElementById("requestInput").value = idea.n;
+      document.getElementById("reqCount").textContent = idea.n.length;
+    });
+    el.appendChild(c);
+  });
+}
+
+/* ===== GEMINI CODE GENERATION ===== */
+var GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+
+async function callGeminiCode(prompt) {
+  if (!GEMINI_KEY) throw new Error("Gemini API 키가 없습니다. (DB 연결 확인)");
+  for (var mi=0; mi<GEMINI_MODELS.length; mi++) {
+    var url = "https://generativelanguage.googleapis.com/v1beta/models/" + GEMINI_MODELS[mi] + ":generateContent?key=" + GEMINI_KEY;
+    try {
+      var res = await fetch(url, {
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body: JSON.stringify({
+          contents:[{parts:[{text:prompt}]}],
+          generationConfig:{temperature:0.6, maxOutputTokens:8192, responseMimeType:"application/json"}
+        })
+      });
+      if (res.status===404 || res.status===503) continue;
+      var data = await res.json();
+      if (!res.ok) throw new Error(data.error ? data.error.message : res.statusText);
+      var txt = data.candidates && data.candidates[0] && data.candidates[0].content
+                && data.candidates[0].content.parts && data.candidates[0].content.parts[0]
+                && data.candidates[0].content.parts[0].text;
+      var finishReason = data.candidates && data.candidates[0] && data.candidates[0].finishReason;
+      if (!txt) throw new Error("응답 없음");
+      return {text: txt, truncated: finishReason === "MAX_TOKENS"};
+    } catch(e) { if (e.message && e.message.indexOf("API key")>=0) throw e; }
+  }
+  throw new Error("Gemini 모든 모델 실패");
+}
+
+function buildCodePrompt(existingCode, request) {
+  var base = "당신은 초등학생의 코딩 놀이를 도와주는 친절한 AI 선생님입니다. "
+    + "학생이 설명한 대로 재미있고 안전한 웹 앱/게임을 만들어주세요.\n\n"
+    + "규칙:\n"
+    + "- 완성된 하나의 HTML 파일 전체를 작성하세요 (<!DOCTYPE html>부터 </html>까지 모두 포함).\n"
+    + "- CSS는 <style> 안에, JavaScript는 <script> 안에 전부 포함하고, 외부 이미지·외부 API·외부 폰트·외부 라이브러리는 사용하지 마세요. 인터넷 연결 없이도 동작해야 합니다.\n"
+    + "- 밝고 알록달록하고 초등학생이 좋아할 디자인으로 만들고, 이모지를 적극 활용하세요. 글씨는 크고 읽기 쉽게 만드세요.\n"
+    + "- 폭력적이거나 무섭거나 부적절한 내용은 절대 넣지 마세요.\n"
+    + "- 반드시 아래 JSON 형식으로만 답하세요. 마크다운 코드블록이나 다른 설명 없이 순수 JSON 객체 하나만 출력하세요.\n"
+    + '{"reply":"학생에게 보여줄 아주 짧고 친근한 한두 문장 설명(이모지 사용 가능, 코드 언급 금지)","code":"완성된 HTML 파일 전체 문자열"}';
+  if (existingCode) {
+    return base + "\n\n--- 지금까지 만든 코드 ---\n" + existingCode + "\n--- 코드 끝 ---\n\n"
+      + '학생의 새 요청: "' + request + '"\n'
+      + "기존에 잘 동작하던 기능과 디자인은 최대한 그대로 유지하면서, 요청한 부분만 반영해서 전체 코드를 완성된 형태로 다시 만들어주세요.";
+  }
+  return base + '\n\n학생의 요청: "' + request + '"\n이 요청에 맞는 새로운 앱을 처음부터 만들어주세요.';
+}
+
+function parseCodeResponse(txt) {
+  var clean = txt.replace(/```json|```html|```/g, "").trim();
+  var info;
+  try { info = JSON.parse(clean); }
+  catch(e) {
+    var m = clean.match(/"code"\s*:\s*"([\s\S]*)"\s*}\s*$/);
+    throw new Error("AI의 답을 이해하지 못했어요. 다시 시도해 주세요.");
+  }
+  if (!info.code || info.code.trim().length < 20) throw new Error("코드를 만들지 못했어요. 요청을 조금 더 쉽게 써서 다시 시도해 보세요.");
+  return info;
+}
+
+/* ===== MAIN FLOW ===== */
+async function submitRequest() {
+  var req = document.getElementById("requestInput").value.trim();
+  if (!req) { showToast("만들고 싶은 것을 먼저 써주세요! ✏️"); return; }
+  await runGeneration(req, "makeBtn", "🚀 만들기");
+}
+async function submitFollowup() {
+  var req = document.getElementById("followupInput").value.trim();
+  if (!req) { showToast("고치고 싶은 부분을 먼저 써주세요! ✏️"); return; }
+  await runGeneration(req, "followBtn", "✨ 수정하기");
+}
+
+async function runGeneration(request, btnId, btnDefaultText) {
+  var btn = document.getElementById(btnId);
+  btn.disabled = true;
+  document.getElementById("loading").style.display = "block";
+  document.getElementById("errorBox").style.display = "none";
+  document.getElementById("loadingText").textContent = currentCode ? "AI가 코드를 고치고 있어요..." : "AI가 코드를 쓰고 있어요...";
+
+  addChat("user", request);
+
+  try {
+    var prompt = buildCodePrompt(currentCode, request);
+    var result = await callGeminiCode(prompt);
+    var info = parseCodeResponse(result.text);
+
+    currentCode = info.code;
+    if (!appTitle) appTitle = request.slice(0, 24);
+    versions.push({label: "버전 " + (versions.length+1), code: currentCode, request: request});
+    curVersionIdx = versions.length - 1;
+
+    addChat("ai", info.reply || "✨ 다 만들었어요! 미리보기를 확인해 보세요.");
+    renderPreview(currentCode);
+    renderVersions();
+
+    document.getElementById("previewCard").style.display = "block";
+    document.getElementById("chatCard").style.display = "block";
+    document.getElementById("followupCard").style.display = "block";
+    document.getElementById("previewTitle").textContent = appTitle;
+
+    if (btnId === "makeBtn") {
+      document.getElementById("requestInput").value = "";
+      document.getElementById("reqCount").textContent = "0";
+      addHistory({title: appTitle, shareUrl: null});
+    } else {
+      document.getElementById("followupInput").value = "";
+      document.getElementById("followCount").textContent = "0";
+    }
+
+    document.getElementById("previewCard").scrollIntoView({behavior:"smooth", block:"start"});
+  } catch(e) {
+    document.getElementById("errorBox").innerHTML = "앗! 오류가 생겼어요 😢<br><small>" + escHtml(e.message) + "</small>";
+    document.getElementById("errorBox").style.display = "block";
+  }
+
+  document.getElementById("loading").style.display = "none";
+  btn.disabled = false;
+}
+
+/* ===== CHAT LOG ===== */
+function addChat(role, text) {
+  chatLogArr.push({role:role, text:text});
+  renderChatLog();
+}
+function renderChatLog() {
+  var el = document.getElementById("chatLog");
+  el.innerHTML = "";
+  chatLogArr.forEach(function(m){
+    var wrap = document.createElement("div");
+    wrap.className = "chat-msg " + m.role;
+    var avatar = document.createElement("span");
+    avatar.className = "chat-avatar";
+    avatar.textContent = m.role === "user" ? "🧒" : "🤖";
+    var bubble = document.createElement("span");
+    bubble.className = "chat-bubble";
+    bubble.textContent = m.text;
+    wrap.appendChild(avatar); wrap.appendChild(bubble);
+    el.appendChild(wrap);
+  });
+  el.scrollTop = el.scrollHeight;
+}
+
+/* ===== PREVIEW ===== */
+function renderPreview(code) {
+  var frame = document.getElementById("previewFrame");
+  frame.srcdoc = code;
+}
+
+/* ===== VERSIONS ===== */
+function renderVersions() {
+  var el = document.getElementById("versionRow");
+  el.innerHTML = "";
+  versions.forEach(function(v, idx){
+    var c = document.createElement("span");
+    c.className = "v-chip" + (idx===curVersionIdx ? " cur" : "");
+    c.textContent = "🕐 " + v.label;
+    c.addEventListener("click", function(){
+      curVersionIdx = idx;
+      currentCode = v.code;
+      renderPreview(currentCode);
+      renderVersions();
+      showToast(v.label + "(으)로 되돌렸어요!");
+    });
+    el.appendChild(c);
+  });
+}
+
+/* ===== FULLSCREEN ===== */
+function toggleFullscreen() {
+  var card = document.getElementById("previewCard");
+  isFullscreen = !isFullscreen;
+  card.classList.toggle("fs", isFullscreen);
+  document.body.style.overflow = isFullscreen ? "hidden" : "";
+  var fsBtn = document.getElementById("fsBtn");
+  fsBtn.textContent = isFullscreen ? "✕ 닫기" : "🔍 전체화면";
+  fsBtn.className = "btn-sm " + (isFullscreen ? "close" : "fs");
+  if (isFullscreen) card.scrollIntoView({behavior:"instant", block:"start"});
+}
+
+/* ===== SHARE ===== */
+async function shareApp() {
+  if (!currentCode) return;
+  showToast("공유 링크를 만드는 중이에요...");
+  try {
+    var rows = await sbInsert("playground_apps", { title: appTitle || "이름 없는 앱", code: currentCode });
+    var id = rows && rows[0] && rows[0].id;
+    if (!id) throw new Error("no id");
+    var url = location.origin + location.pathname + "?app=" + id;
+    document.getElementById("shareLinkInput").value = url;
+    document.getElementById("shareBox").classList.add("show");
+    showToast("✅ 공유 링크가 만들어졌어요!");
+    var last = history_arr[0];
+    if (last && last.title === appTitle) last.shareUrl = url;
+    renderHistory();
+  } catch(e) {
+    showToast("공유 링크 생성에 실패했어요 😢 (playground_apps 테이블을 확인해 주세요)");
+  }
+}
+function copyShareLink() {
+  var input = document.getElementById("shareLinkInput");
+  input.select();
+  navigator.clipboard && navigator.clipboard.writeText(input.value).then(function(){ showToast("📋 복사됐어요!"); })
+    .catch(function(){ document.execCommand("copy"); showToast("📋 복사됐어요!"); });
+}
+
+/* ===== SHARED APP LOAD ===== */
+function getQueryParam(name) {
+  var m = new RegExp("[?&]"+name+"=([^&]*)").exec(location.search);
+  return m ? decodeURIComponent(m[1].replace(/\+/g," ")) : null;
+}
+var sharedCode = null, sharedTitle = "";
+async function loadSharedApp(id) {
+  document.getElementById("loading").style.display = "block";
+  document.getElementById("loadingText").textContent = "앱을 불러오는 중이에요...";
+  try {
+    var rows = await sbGet("playground_apps", "?id=eq." + encodeURIComponent(id) + "&select=*");
+    if (!rows || !rows.length) throw new Error("앱을 찾을 수 없어요. 링크를 다시 확인해 주세요.");
+    var row = rows[0];
+    sharedCode = row.code; sharedTitle = row.title;
+    renderPreview(sharedCode);
+    document.getElementById("previewCard").style.display = "block";
+    document.getElementById("previewTitle").textContent = sharedTitle;
+    document.getElementById("shareBtnTop").style.display = "none";
+    document.getElementById("previewCard").scrollIntoView({behavior:"instant", block:"start"});
+  } catch(e) {
+    document.getElementById("errorBox").innerHTML = "앗! 앱을 불러오지 못했어요 😢<br><small>" + escHtml(e.message) + "</small>";
+    document.getElementById("errorBox").style.display = "block";
+  }
+  document.getElementById("loading").style.display = "none";
+}
+function forkFromShared() {
+  if (!sharedCode) return;
+  currentCode = sharedCode;
+  appTitle = sharedTitle;
+  versions = [{label:"버전 1 (친구 작품)", code: currentCode, request:"공유받은 앱"}];
+  curVersionIdx = 0;
+  chatLogArr = [];
+  addChat("ai", "👋 친구가 만든 앱을 가져왔어요! 이제 원하는 대로 고쳐볼까요?");
+  renderVersions();
+  document.getElementById("sharedBanner").style.display = "none";
+  document.getElementById("startCard").style.display = "none";
+  document.getElementById("historyCard").style.display = "block";
+  document.getElementById("chatCard").style.display = "block";
+  document.getElementById("followupCard").style.display = "block";
+  document.getElementById("shareBtnTop").style.display = "inline-block";
+  document.getElementById("shareBox").classList.remove("show");
+  history.replaceState(null, "", location.pathname);
+  document.getElementById("followupInput").scrollIntoView({behavior:"smooth", block:"center"});
+}
+
+/* ===== HISTORY ===== */
+function addHistory(item) {
+  history_arr.unshift(item);
+  if (history_arr.length > 10) history_arr.pop();
+  renderHistory();
+}
+function renderHistory() {
+  var el = document.getElementById("historyList");
+  if (history_arr.length===0) { el.innerHTML = '<span class="h-empty">아직 만든 앱이 없어요.</span>'; return; }
+  el.innerHTML = "";
+  history_arr.forEach(function(item){
+    var s = document.createElement("span");
+    s.className = "h-item";
+    s.textContent = (item.shareUrl ? "🔗 " : "🕹️ ") + item.title;
+    s.addEventListener("click", function(){
+      if (item.shareUrl) { location.href = item.shareUrl; return; }
+      showToast("이 앱은 지금 화면에서 계속 이어서 만들 수 있어요!");
+      document.getElementById("previewCard").scrollIntoView({behavior:"smooth"});
+    });
+    el.appendChild(s);
+  });
+}
+
+/* ===== HELPERS ===== */
+function escHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function showToast(msg){
+  var el = document.getElementById("toast");
+  el.textContent = msg; el.classList.add("show");
+  clearTimeout(el._t); el._t = setTimeout(function(){ el.classList.remove("show"); }, 2600);
+}
+
+/* ===== START ===== */
+init();
+</script>
+</body>
+</html>
