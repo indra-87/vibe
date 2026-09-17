@@ -39,9 +39,11 @@ body{font-family:'Noto Sans KR',sans-serif;background:linear-gradient(160deg,#EA
 .card-sub{font-size:13px;color:var(--gray-400);margin-bottom:16px}
 
 /* IDEA CHIPS */
-.idea-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.idea-chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
 .i-chip{padding:7px 14px;border-radius:20px;background:var(--gray-50);color:var(--gray-600);font-size:13px;font-weight:700;cursor:pointer;border:2px solid var(--gray-200);transition:all .15s;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .i-chip:hover{border-color:var(--teal);color:var(--teal)}
+.idea-refresh{padding:6px 12px;border-radius:20px;background:var(--pink-l);color:var(--pink);font-size:12px;font-weight:700;cursor:pointer;border:2px solid transparent;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.idea-refresh:hover{border-color:var(--pink)}
 
 /* INPUT */
 .field-count{font-size:11px;color:var(--gray-400);font-weight:400;float:right}
@@ -57,6 +59,9 @@ textarea:focus{border-color:var(--teal);box-shadow:0 0 0 4px rgba(14,165,160,.12
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-text{font-family:'Jua',sans-serif;font-size:17px;color:var(--teal)}
 .loading-sub{font-size:12px;color:var(--gray-400);margin-top:6px}
+.progress-bar-wrap{max-width:320px;margin:18px auto 0;height:12px;background:var(--gray-100);border-radius:10px;overflow:hidden;display:none}
+.progress-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--teal),var(--violet));border-radius:10px;transition:width .4s ease}
+.progress-pct{font-size:11px;color:var(--gray-400);margin-top:6px}
 
 /* ERROR */
 .error-box{background:#FFF1F2;border:2px solid #FECDD3;border-radius:var(--r);padding:16px 20px;color:#9F1239;font-size:14px;display:none;margin-bottom:20px;line-height:1.6}
@@ -81,12 +86,15 @@ textarea:focus{border-color:var(--teal);box-shadow:0 0 0 4px rgba(14,165,160,.12
 .btn-sm.share{background:var(--amber-l);color:#B45309;border-color:var(--amber)}
 .btn-sm.share:hover{background:var(--amber);color:#fff}
 .btn-sm.close{background:var(--gray-100);color:var(--gray-600)}
+.btn-sm.new{background:var(--green-l);color:#059669;border-color:var(--green)}
+.btn-sm.new:hover{background:var(--green);color:#fff}
 .preview-frame-wrap{background:#fff}
 #previewFrame{width:100%;height:440px;border:none;display:block;background:#fff}
 
-.preview-card.fs{position:fixed;inset:0;z-index:999;border-radius:0;margin:0;max-width:none;display:flex;flex-direction:column}
-.preview-card.fs .preview-frame-wrap{flex:1}
-.preview-card.fs #previewFrame{height:100%}
+.preview-card.fs{position:fixed;inset:0;z-index:999;border-radius:0;margin:0;max-width:none;width:100vw;height:100vh;display:flex;flex-direction:column}
+.preview-card.fs .preview-frame-wrap{flex:1;min-height:0}
+.preview-card.fs #previewFrame{height:100%;width:100%}
+.preview-card.fs .version-row,.preview-card.fs .share-box{display:none}
 
 /* VERSIONS */
 .version-row{display:flex;flex-wrap:wrap;gap:8px;padding:12px 18px 16px}
@@ -139,7 +147,7 @@ textarea:focus{border-color:var(--teal);box-shadow:0 0 0 4px rgba(14,165,160,.12
 
   <div class="card" id="startCard">
     <div class="card-title">🪄 무엇을 만들고 싶나요?</div>
-    <div class="card-sub">만들고 싶은 것을 자유롭게 써보세요. 예를 들고 싶으면 아래 버튼을 눌러보세요!</div>
+    <div class="card-sub">만들고 싶은 것을 자유롭게 써보세요. 생각이 잘 안 난다면 아래 버튼을 눌러보세요!</div>
     <div class="idea-chips" id="ideaChips"></div>
     <textarea id="requestInput" maxlength="200" placeholder="예: 클릭하면 점수가 올라가는 게임을 만들어줘"></textarea>
     <div class="field-count"><span id="reqCount">0</span>/200자</div>
@@ -151,6 +159,10 @@ textarea:focus{border-color:var(--teal);box-shadow:0 0 0 4px rgba(14,165,160,.12
     <div class="spinner"></div>
     <div class="loading-text" id="loadingText">AI가 코드를 쓰고 있어요...</div>
     <div class="loading-sub">조금만 기다려 주세요! 💻</div>
+    <div class="progress-bar-wrap" id="progressBarWrap">
+      <div class="progress-bar-fill" id="progressFill"></div>
+    </div>
+    <div class="progress-pct" id="progressPct" style="display:none"></div>
   </div>
 
   <div class="card" id="chatCard" style="display:none">
@@ -162,6 +174,7 @@ textarea:focus{border-color:var(--teal);box-shadow:0 0 0 4px rgba(14,165,160,.12
     <div class="preview-toolbar">
       <div class="preview-toolbar-title">👀 <span id="previewTitle">미리보기</span></div>
       <div class="preview-toolbar-btns">
+        <button class="btn-sm new" id="newAppBtn" onclick="resetApp()">🆕 새 앱 만들기</button>
         <button class="btn-sm fs" id="fsBtn" onclick="toggleFullscreen()">🔍 전체화면</button>
         <button class="btn-sm share" id="shareBtnTop" onclick="shareApp()">🔗 공유하기</button>
       </div>
@@ -292,6 +305,11 @@ function renderIdeaChips() {
     });
     el.appendChild(c);
   });
+  var refresh = document.createElement("span");
+  refresh.className = "idea-refresh";
+  refresh.textContent = "🔀 다른 아이디어";
+  refresh.addEventListener("click", renderIdeaChips);
+  el.appendChild(refresh);
 }
 
 /* ===== GEMINI CODE GENERATION ===== */
@@ -306,7 +324,19 @@ async function callGeminiCode(prompt) {
         method:"POST", headers:{"Content-Type":"application/json"},
         body: JSON.stringify({
           contents:[{parts:[{text:prompt}]}],
-          generationConfig:{temperature:0.6, maxOutputTokens:8192, responseMimeType:"application/json"}
+          generationConfig:{
+            temperature:0.65,
+            maxOutputTokens:32768,
+            responseMimeType:"application/json",
+            responseSchema:{
+              type:"OBJECT",
+              properties:{
+                reply:{type:"STRING"},
+                code:{type:"STRING"}
+              },
+              required:["reply","code"]
+            }
+          }
         })
       });
       if (res.status===404 || res.status===503) continue;
@@ -324,33 +354,83 @@ async function callGeminiCode(prompt) {
 }
 
 function buildCodePrompt(existingCode, request) {
-  var base = "당신은 초등학생의 코딩 놀이를 도와주는 친절한 AI 선생님입니다. "
-    + "학생이 설명한 대로 재미있고 안전한 웹 앱/게임을 만들어주세요.\n\n"
-    + "규칙:\n"
-    + "- 완성된 하나의 HTML 파일 전체를 작성하세요 (<!DOCTYPE html>부터 </html>까지 모두 포함).\n"
-    + "- CSS는 <style> 안에, JavaScript는 <script> 안에 전부 포함하고, 외부 이미지·외부 API·외부 폰트·외부 라이브러리는 사용하지 마세요. 인터넷 연결 없이도 동작해야 합니다.\n"
-    + "- 밝고 알록달록하고 초등학생이 좋아할 디자인으로 만들고, 이모지를 적극 활용하세요. 글씨는 크고 읽기 쉽게 만드세요.\n"
+  var base = "당신은 초등학생들을 위한 'HTML/JS/CSS 원페이지 게임 및 도구 제작 전문가'입니다. "
+    + "학생이 말하는 아이디어를 실제로 잘 작동하는, 완성도 높은 미니 게임이나 도구로 만들어주는 것이 목표입니다.\n\n"
+    + "필수 기술 지침:\n"
+    + "- 단일 파일 구조: <!DOCTYPE html>부터 </html>까지 모든 HTML, CSS(<style> 안), JavaScript(<script> 안)를 한 파일에 전부 포함하세요.\n"
+    + "- 완성도를 높이기 위해 필요하다면 아래 CDN 라이브러리를 적극 활용하세요 (실제 존재하는 정확한 URL로 <script src=\"...\"> 또는 <link href=\"...\">를 사용): \n"
+    + "  · 아이콘: https://cdnjs.cloudflare.com 의 Font Awesome\n"
+    + "  · 애니메이션: https://cdnjs.cloudflare.com 의 Animate.css\n"
+    + "  · 한글 폰트: https://fonts.googleapis.com 의 Google Fonts (Gaegu, Jua, Noto Sans KR 등 가독성 좋고 아이들이 좋아할 폰트)\n"
+    + "  · 필요하면 Canvas API로 파티클/폭죽 같은 화려한 효과를 직접 구현하세요.\n"
+    + "- 초등학생이 신기해할 인터랙티브 요소(클릭 시 효과, 점수 계산, 타이머, 애니메이션, 효과음 등)를 적극 넣어 완성도 있게 만드세요. 대충 만들지 말고 실제로 끝까지 플레이 가능한 수준으로 완성하세요.\n"
+    + "- Flexbox/Grid를 사용해 태블릿이나 PC 어디서든 화면을 꽉 채우는 반응형 레이아웃으로 만드세요. html, body는 반드시 margin:0; padding:0; height:100%; 로 설정하고, 최상위 컨테이너는 min-height:100vh; width:100%; 로 화면 전체를 가득 채우도록 만드세요 (전체화면으로 봤을 때 빈 여백이 크게 남지 않아야 합니다).\n"
+    + "- 밝고 알록달록한 디자인, 큰 글씨, 이모지를 적극 활용하세요.\n"
+    + "- 코드 중간중간 // 주석으로 어느 부분을 바꾸면 무엇이 바뀌는지 친절하게 알려주세요. (예: // 여기서 배경 색을 바꿀 수 있어요!)\n"
+    + "- 모든 자바스크립트 로직은 오류 없이 즉시 실행되어야 합니다.\n"
     + "- 폭력적이거나 무섭거나 부적절한 내용은 절대 넣지 마세요.\n"
-    + "- 반드시 아래 JSON 형식으로만 답하세요. 마크다운 코드블록이나 다른 설명 없이 순수 JSON 객체 하나만 출력하세요.\n"
-    + '{"reply":"학생에게 보여줄 아주 짧고 친근한 한두 문장 설명(이모지 사용 가능, 코드 언급 금지)","code":"완성된 HTML 파일 전체 문자열"}';
+    + "- 반드시 JSON 형식으로만 답하세요. reply 필드에는 학생에게 보여줄 아주 짧고 활기찬 한두 문장 설명을 마법사 선생님처럼 친근한 말투로 쓰세요(이모지 사용 가능, 코드나 기술 용어 언급 금지). code 필드에는 완성된 HTML 파일 전체를 문자열로 담으세요.";
   if (existingCode) {
     return base + "\n\n--- 지금까지 만든 코드 ---\n" + existingCode + "\n--- 코드 끝 ---\n\n"
       + '학생의 새 요청: "' + request + '"\n'
       + "기존에 잘 동작하던 기능과 디자인은 최대한 그대로 유지하면서, 요청한 부분만 반영해서 전체 코드를 완성된 형태로 다시 만들어주세요.";
   }
-  return base + '\n\n학생의 요청: "' + request + '"\n이 요청에 맞는 새로운 앱을 처음부터 만들어주세요.';
+  return base + '\n\n학생의 요청: "' + request + '"\n이 요청에 맞는 새로운 앱을 처음부터 완성도 있게 만들어주세요.';
 }
 
-function parseCodeResponse(txt) {
+function parseCodeResponse(txt, truncated) {
   var clean = txt.replace(/```json|```html|```/g, "").trim();
   var info;
   try { info = JSON.parse(clean); }
   catch(e) {
-    var m = clean.match(/"code"\s*:\s*"([\s\S]*)"\s*}\s*$/);
-    throw new Error("AI의 답을 이해하지 못했어요. 다시 시도해 주세요.");
+    var htmlStart = clean.indexOf("<!DOCTYPE");
+    if (htmlStart < 0) htmlStart = clean.indexOf("<html");
+    if (htmlStart >= 0) {
+      info = {reply: "✨ 다 만들었어요! 미리보기를 확인해 보세요.", code: clean.slice(htmlStart)};
+    } else if (truncated) {
+      throw new Error("이 요청은 코드가 너무 길어져서 다 완성하지 못했어요. 조금 더 간단한 버전으로 요청해 보거나, 다시 한 번 시도해 주세요.");
+    } else {
+      throw new Error("AI의 답을 이해하지 못했어요. 다시 시도해 주세요.");
+    }
   }
-  if (!info.code || info.code.trim().length < 20) throw new Error("코드를 만들지 못했어요. 요청을 조금 더 쉽게 써서 다시 시도해 보세요.");
+  if (!info.code || info.code.trim().length < 20) {
+    if (truncated) throw new Error("이 요청은 코드가 너무 길어져서 다 완성하지 못했어요. 조금 더 간단한 버전으로 요청해 보거나, 다시 한 번 시도해 주세요.");
+    throw new Error("코드를 만들지 못했어요. 요청을 조금 더 쉽게 써서 다시 시도해 보세요.");
+  }
   return info;
+}
+
+/* ===== PROGRESS BAR (simulated) ===== */
+var progressTimer = null, progressPct = 0;
+var PROGRESS_STEPS = ["아이디어를 정리하고 있어요...","코드를 설계하고 있어요...","디자인을 입히고 있어요...","마무리하고 있어요..."];
+function startProgress() {
+  progressPct = 0;
+  var fill = document.getElementById("progressFill");
+  var wrap = document.getElementById("progressBarWrap");
+  var pctEl = document.getElementById("progressPct");
+  wrap.style.display = "block"; pctEl.style.display = "block";
+  fill.style.width = "0%"; pctEl.textContent = "0%";
+  var stepIdx = 0;
+  document.getElementById("loadingText").textContent = PROGRESS_STEPS[0];
+  clearInterval(progressTimer);
+  progressTimer = setInterval(function(){
+    progressPct += Math.random()*6 + 2;
+    if (progressPct > 92) progressPct = 92;
+    fill.style.width = progressPct + "%";
+    pctEl.textContent = Math.round(progressPct) + "%";
+    var newStep = Math.min(PROGRESS_STEPS.length-1, Math.floor(progressPct/25));
+    if (newStep !== stepIdx) { stepIdx = newStep; document.getElementById("loadingText").textContent = PROGRESS_STEPS[stepIdx]; }
+  }, 500);
+}
+function finishProgress() {
+  clearInterval(progressTimer);
+  var fill = document.getElementById("progressFill");
+  var pctEl = document.getElementById("progressPct");
+  fill.style.width = "100%"; pctEl.textContent = "100%";
+  setTimeout(function(){
+    document.getElementById("progressBarWrap").style.display = "none";
+    pctEl.style.display = "none";
+  }, 350);
 }
 
 /* ===== MAIN FLOW ===== */
@@ -371,13 +451,14 @@ async function runGeneration(request, btnId, btnDefaultText) {
   document.getElementById("loading").style.display = "block";
   document.getElementById("errorBox").style.display = "none";
   document.getElementById("loadingText").textContent = currentCode ? "AI가 코드를 고치고 있어요..." : "AI가 코드를 쓰고 있어요...";
+  startProgress();
 
   addChat("user", request);
 
   try {
     var prompt = buildCodePrompt(currentCode, request);
     var result = await callGeminiCode(prompt);
-    var info = parseCodeResponse(result.text);
+    var info = parseCodeResponse(result.text, result.truncated);
 
     currentCode = info.code;
     if (!appTitle) appTitle = request.slice(0, 24);
@@ -396,6 +477,7 @@ async function runGeneration(request, btnId, btnDefaultText) {
     if (btnId === "makeBtn") {
       document.getElementById("requestInput").value = "";
       document.getElementById("reqCount").textContent = "0";
+      document.getElementById("startCard").style.display = "none";
       addHistory({title: appTitle, shareUrl: null});
     } else {
       document.getElementById("followupInput").value = "";
@@ -408,6 +490,7 @@ async function runGeneration(request, btnId, btnDefaultText) {
     document.getElementById("errorBox").style.display = "block";
   }
 
+  finishProgress();
   document.getElementById("loading").style.display = "none";
   btn.disabled = false;
 }
@@ -465,11 +548,36 @@ function toggleFullscreen() {
   var card = document.getElementById("previewCard");
   isFullscreen = !isFullscreen;
   card.classList.toggle("fs", isFullscreen);
+  document.documentElement.style.overflow = isFullscreen ? "hidden" : "";
   document.body.style.overflow = isFullscreen ? "hidden" : "";
   var fsBtn = document.getElementById("fsBtn");
   fsBtn.textContent = isFullscreen ? "✕ 닫기" : "🔍 전체화면";
   fsBtn.className = "btn-sm " + (isFullscreen ? "close" : "fs");
-  if (isFullscreen) card.scrollIntoView({behavior:"instant", block:"start"});
+  if (isFullscreen) { window.scrollTo(0,0); }
+  else { card.scrollIntoView({behavior:"instant", block:"start"}); }
+}
+
+/* ===== RESET / NEW APP ===== */
+function resetApp() {
+  if (currentCode && !confirm("정말 새로운 앱을 만들까요? 지금 만든 내용은 사라져요!")) return;
+  if (isFullscreen) toggleFullscreen();
+  currentCode = ""; appTitle = ""; chatLogArr = []; versions = []; curVersionIdx = -1;
+  document.getElementById("chatLog").innerHTML = "";
+  document.getElementById("versionRow").innerHTML = "";
+  document.getElementById("previewFrame").srcdoc = "";
+  document.getElementById("previewCard").style.display = "none";
+  document.getElementById("chatCard").style.display = "none";
+  document.getElementById("followupCard").style.display = "none";
+  document.getElementById("shareBox").classList.remove("show");
+  document.getElementById("shareBtnTop").style.display = "inline-block";
+  document.getElementById("requestInput").value = "";
+  document.getElementById("reqCount").textContent = "0";
+  document.getElementById("followupInput").value = "";
+  document.getElementById("followCount").textContent = "0";
+  document.getElementById("startCard").style.display = "block";
+  renderIdeaChips();
+  document.getElementById("startCard").scrollIntoView({behavior:"smooth", block:"start"});
+  showToast("🆕 새로운 앱을 만들어 볼까요?");
 }
 
 /* ===== SHARE ===== */
